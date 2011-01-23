@@ -9,6 +9,10 @@
 						 
 import XMonad
 import XMonad.Actions.CycleWS
+import XMonad.Hooks.DynamicLog
+import XMonad.Hooks.ManageDocks
+import XMonad.Util.Run(spawnPipe)
+import System.IO
 import System.Exit
  
 import qualified XMonad.StackSet as W
@@ -271,7 +275,7 @@ myFocusFollowsMouse = True
 --
 -- > logHook = dynamicLogDzen
 --
-myLogHook = return ()
+-- myLogHook = return ()
 					 
 ------------------------------------------------------------------------
 	-- Startup hook
@@ -288,16 +292,16 @@ myStartupHook = return ()
 		 
 -- Run xmonad with the settings you specify. No need to modify this.
 --
-main = xmonad defaults
-
--- A structure containing your configuration settings, overriding
--- fields in the default config. Any you don't override, will 
--- use the defaults defined in xmonad/XMonad/Config.hs
--- 
--- No need to modify this.
---
-defaults = defaultConfig {
-      -- simple stuff
+main = do
+	xmproc <- spawnPipe "/contrib/projects/xmobar/xmobar-0.9.2.bin ~/.xmobarrc"
+	xmonad $ defaultConfig {
+	-- A structure containing your configuration settings, overriding
+	-- fields in the default config. Any you don't override, will 
+	-- use the defaults defined in xmonad/XMonad/Config.hs
+	-- 
+	-- No need to modify this.
+	--
+		  -- simple stuff
         terminal           = myTerminal,
         focusFollowsMouse  = myFocusFollowsMouse,
         borderWidth        = myBorderWidth,
@@ -313,8 +317,14 @@ defaults = defaultConfig {
         mouseBindings      = myMouseBindings,
  
       -- hooks, layouts
-        layoutHook         = myLayout,
-        manageHook         = myManageHook,
-        logHook            = myLogHook,
+--        layoutHook         = myLayout,
+--        manageHook         = myManageHook,
+--        logHook            = myLogHook,
         startupHook        = myStartupHook
-    }
+	, manageHook = manageDocks <+> manageHook defaultConfig <+> myManageHook
+	, layoutHook = avoidStruts $ layoutHook defaultConfig
+	, logHook = dynamicLogWithPP $ xmobarPP
+			{ppOutput = hPutStrLn xmproc
+			 , ppTitle = xmobarColor "green" "" . shorten 50
+			}
+	}
