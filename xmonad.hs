@@ -8,9 +8,11 @@
 --
 						 
 import XMonad
+import Data.Monoid
 import XMonad.Actions.CycleWS
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
+import XMonad.Hooks.SetWMName
 import XMonad.Util.Run(spawnPipe)
 import System.IO
 import System.Exit
@@ -46,7 +48,7 @@ myModMask       = mod4Mask
 -- Set numlockMask = 0 if you don't have a numlock key, or want to treat
 -- numlock status separately.
 --
-myNumlockMask   = mod2Mask
+-- myNumlockMask   = mod2Mask -- deprecated in xmonad-0.9.1
  
 -- The default number of workspaces (virtual screens) and their names.
 -- By default we use numeric strings, but any string may be used as a
@@ -78,7 +80,7 @@ myFocusedBorderColor = "#6666FF"
 --
 -- Fields are: top, bottom, left, right.
 --
-myDefaultGaps   = [(0,0,0,0)]
+-- myDefaultGaps   = [(0,0,0,0)] -- deprecated 0.8.1
 					 
 ------------------------------------------------------------------------
 -- Key bindings. Add, modify or remove key bindings here.
@@ -138,7 +140,7 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
     , ((modMask .|. shiftMask, xK_h),  shiftToPrev >> prevWS)
 
     -- Added --  
-    , ((modMask,               xK_i     ), spawn "iceweasel")
+    , ((modMask,               xK_f     ), spawn "firefox")
  
     -- Modified -- Launch terminal
     , ((modMask,               xK_x     ), spawn "xterm"  )
@@ -163,11 +165,12 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
  
     -- Deincrement the number of windows in the master area
     , ((modMask              , xK_End), sendMessage (IncMasterN (-1)))
- 
-    -- toggle the status bar gap
-    , ((modMask              , xK_b     ),
-          modifyGap (\i n -> let x = (XMonad.defaultGaps conf ++ repeat (0,0,0,0)) !! i
-                             in if n == x then (0,0,0,0) else x))
+    
+    -- -- toggle the status bar gap
+    -- , ((modMask              , xK_b     ),
+    --      modifyGap (\i n -> let x = (XMonad.defaultGaps conf ++ repeat (0,0,0,0)) !! i
+    --                          in if n == x then (0,0,0,0) else x))
+    -- deprecated (syntax change) in 0.9.1
  
     -- Quit xmonad
     , ((modMask .|. shiftMask, xK_m     ), io (exitWith ExitSuccess))
@@ -255,9 +258,13 @@ myLayout = tiled ||| Mirror tiled ||| Full
 myManageHook = composeAll
     [ className =? "MPlayer"        --> doFloat
     , className =? "Gimp"           --> doFloat
+    , className =? "Xmessage"       --> doFloat
+    , className =? "feh"       --> doFloat
+    , title =? "CS184!"       --> doFloat
     , className =? "Pidgin"		--> doFloat
     , className =? "TkZgram"    --> doFloat
     , className =? "Tkzgram"    --> doFloat
+    , className =? "pbj-gui-XTrain"    --> doFloat
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore ]
  
@@ -285,7 +292,8 @@ myFocusFollowsMouse = True
 -- per-workspace layout choices.
 --
 -- By default, do nothing.
-myStartupHook = return ()
+-- Trick java
+myStartupHook = setWMName "LG3D"
 		 
 ------------------------------------------------------------------------
 -- Now run xmonad with all the defaults we set up.
@@ -293,7 +301,7 @@ myStartupHook = return ()
 -- Run xmonad with the settings you specify. No need to modify this.
 --
 main = do
-	xmproc <- spawnPipe "/contrib/projects/xmobar/xmobar-0.9.2.bin ~/.xmobarrc"
+	xmproc <- spawnPipe "xmobar ~/.xmobarrc"
 	xmonad $ defaultConfig {
 	-- A structure containing your configuration settings, overriding
 	-- fields in the default config. Any you don't override, will 
@@ -306,11 +314,11 @@ main = do
         focusFollowsMouse  = myFocusFollowsMouse,
         borderWidth        = myBorderWidth,
         modMask            = myModMask,
-        numlockMask        = myNumlockMask,
+--        numlockMask        = myNumlockMask, -- deprecated 0.9.1
         workspaces         = myWorkspaces,
         normalBorderColor  = myNormalBorderColor,
         focusedBorderColor = myFocusedBorderColor,
-        defaultGaps        = myDefaultGaps,
+--        defaultGaps        = myDefaultGaps, -- deprecated 0.8.1
  
       -- key bindings
         keys               = myKeys,
